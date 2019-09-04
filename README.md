@@ -29,3 +29,15 @@ or
 ```
 sudo python3 setup.py install
 ```
+
+## Running
+
+Can be as simple as
+```
+expressvpn-tray &
+```
+
+But given that StatusIcon is deprecated in Gtk3, it will produce deprecation warnings while it's running. So I recommend to do this instead:
+```
+expressvpn-tray 1>/dev/null 2>&1  &
+```
