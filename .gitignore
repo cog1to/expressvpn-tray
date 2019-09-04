@@ -1,0 +1,4 @@
+# Build artifacts
+dist/
+expressvpn_tray.egg-info
+

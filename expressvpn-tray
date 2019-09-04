@@ -1,0 +1,104 @@
+#!/usr/bin/env python3
+
+import gi
+gi.require_version('Gtk', '3.0')
+from gi.repository import Gtk
+from gi.repository import GObject as gobject
+from gi.repository import GLib as glib
+import os
+import subprocess
+import sys
+import re
+import pkg_resources
+
+REFRESH_INTERVAL = 5000
+ICONS_DIR='/usr/share/expressvpn-tray'
+
+class ExpressVpnTray:
+  def __init__(self, logger):
+    # Remember logger.
+    self.logger = logger
+
+    # Check status.
+    self.vpn_status = os.popen('expressvpn status').read().strip()
+    self.is_connected = self.vpn_status != 'Not connected'
+    
+    # Create tray icon.
+    self.tray = Gtk.StatusIcon()
+    self.tray.connect('popup-menu', self.on_right_click)
+    
+    # Update tray icon
+    self.update_icon()
+    
+    # Setup refresh interval
+    glib.timeout_add(REFRESH_INTERVAL, self.refresh, self.tray)
+  
+  def on_right_click(self, icon, event_button, event_time):
+    self.make_menu(event_button, event_time)
+  
+  def make_menu(self, event_button, event_time):
+    menu = Gtk.Menu()
+    
+    # Status
+    status = Gtk.MenuItem("Status: " + self.vpn_status.strip())
+    status.show()
+    menu.append(status)
+    
+    # Connect/Disconnect
+    toggle = Gtk.MenuItem('Disconnect' if self.is_connected else 'Connect')
+    toggle.show()
+    menu.append(toggle)
+    toggle.connect('activate', self.toggle)
+    
+    # Quit
+    quit = Gtk.MenuItem('Quit')
+    quit.show()
+    menu.append(quit)
+    quit.connect('activate', Gtk.main_quit)
+    
+    # Show the menu.
+    menu.popup(None, None, None, Gtk.StatusIcon.position_menu, event_button, event_time)
+  
+  def toggle(self, widget):
+    try:
+      action = 'disconnect' if self.is_connected else 'connect'
+      output = subprocess.run(['expressvpn', action], check=True, stdout=subprocess.PIPE).stdout
+      self.is_connected = not self.is_connected
+      self.update_icon()
+    except:
+      logger.write('Failed to connect.\n')
+  
+  def update_icon(self):
+    self.tray.set_from_file(ICONS_DIR+'/expressvpn-tray-connected.png' if self.is_connected else ICONS_DIR+'/expressvpn-tray-not-connected.png')
+  
+  def refresh(self, widget):
+    try:
+      # Check status.
+      status = os.popen('expressvpn status').read().strip()
+      if not status.startswith('Not connected'):
+        m = re.search('(Connected to .*\n)', status)
+        if m:
+          status = m.group(1)
+      self.vpn_status = status
+      self.is_connected = self.vpn_status != 'Not connected'
+       
+      # Update tray icon
+      self.update_icon()
+      
+      # Schedule next refresh.
+      glib.timeout_add(REFRESH_INTERVAL, self.refresh, self.tray)
+    except:
+      logger.write('Failed to refresh status\n')
+      self.vpn_status = status
+
+if __name__ == "__main__":
+  print(__file__)  
+  
+  # Create log file.
+  logger = sys.stderr
+  sys.stderr = logger
+  
+  # Instantiate the app.
+  app = ExpressVpnTray(logger)
+  Gtk.main()
+
