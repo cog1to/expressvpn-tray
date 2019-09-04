@@ -31,7 +31,7 @@ class ExpressVpnTray:
     self.update_icon()
     
     # Setup refresh interval
-    glib.timeout_add(REFRESH_INTERVAL, self.refresh, self.tray)
+    self.refresh(self.tray)
   
   def on_right_click(self, icon, event_button, event_time):
     self.make_menu(event_button, event_time)
