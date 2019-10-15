@@ -21,7 +21,7 @@ class ExpressVpnTray:
 
     # Check status.
     self.vpn_status = os.popen('expressvpn status').read().strip()
-    self.is_connected = self.vpn_status != 'Not connected'
+    self.is_connected = 'Not connected' not in self.vpn_status
     
     # Create tray icon.
     self.tray = Gtk.StatusIcon()
@@ -80,7 +80,7 @@ class ExpressVpnTray:
         if m:
           status = m.group(1)
       self.vpn_status = status
-      self.is_connected = self.vpn_status != 'Not connected'
+      self.is_connected = 'Not connected' not in self.vpn_status
        
       # Update tray icon
       self.update_icon()
