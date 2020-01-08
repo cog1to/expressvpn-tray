@@ -40,7 +40,8 @@ class ExpressVpnTray:
     menu = Gtk.Menu()
     
     # Status
-    status = Gtk.MenuItem("Status: " + self.vpn_status.strip())
+    ansi_escape = re.compile(r'\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])')
+    status = Gtk.MenuItem("Status: " + ansi_escape.sub('', self.vpn_status.strip()))
     status.show()
     menu.append(status)
     
