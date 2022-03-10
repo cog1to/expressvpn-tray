@@ -6,10 +6,12 @@ setup(
   description='ExpressVPN tray icon written in Gtk3',
   author='Alexander Rogachev',
   author_email='sorryforbadname@gmail.com',
+  url='https://github.com/cog1to/expressvpn-tray',
   scripts=['expressvpn-tray'],
   include_package_data=True,
   py_modules=None,
   data_files=[
     ('share/expressvpn-tray/', ['expressvpn-tray-connected.png', 'expressvpn-tray-not-connected.png'])
-  ]
+  ],
+  license='WTFPL'
 )
