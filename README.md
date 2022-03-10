@@ -8,6 +8,8 @@ Icons are copied from Mac version of ExpressVPN client.
 
 Requires Gtk3 for building and running since it's using Gtk3's StatusIcon for controlling system tray.
 
+The logic relies on the `expressvpn` CLI utility output, so there's a chance it could break with the next released version of ExpressVPN. In that case, feel free to file an issue here, so I can update the code.
+
 ## Building
 
 It's just a python script, duh.

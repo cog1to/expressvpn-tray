@@ -10,6 +10,7 @@ import subprocess
 import sys
 import re
 import pkg_resources
+import utils
 
 REFRESH_INTERVAL = 5000
 ICONS_DIR='/usr/share/expressvpn-tray'
@@ -20,9 +21,10 @@ class ExpressVpnTray:
     self.logger = logger
 
     # Check status.
-    self.vpn_status = os.popen('expressvpn status').read().strip()
+    self.vpn_status = utils.status()
     self.is_connected = 'Not connected' not in self.vpn_status
-    
+    self.locations = utils.locations()
+
     # Create tray icon.
     self.tray = Gtk.StatusIcon()
     self.tray.connect('popup-menu', self.on_right_click)
@@ -40,16 +42,30 @@ class ExpressVpnTray:
     menu = Gtk.Menu()
     
     # Status
-    ansi_escape = re.compile(r'\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])')
-    status = Gtk.MenuItem("Status: " + ansi_escape.sub('', self.vpn_status.strip()))
+    status = Gtk.MenuItem("Status: " + self.vpn_status)
+    status.set_sensitive(False)
     status.show()
     menu.append(status)
     
     # Connect/Disconnect
-    toggle = Gtk.MenuItem('Disconnect' if self.is_connected else 'Connect')
+    toggle = Gtk.MenuItem('Disconnect' if self.is_connected else 'Connect to last location')
     toggle.show()
     menu.append(toggle)
     toggle.connect('activate', self.toggle)
+
+    # Smart locations.
+    if not self.is_connected:
+      smart_submenu = Gtk.Menu()
+      for location in self.locations:
+        item = Gtk.MenuItem(location.title)
+        item.show()
+        item.connect('activate', self.connect, location.id)
+        smart_submenu.append(item)
+      
+      smart = Gtk.MenuItem('Recommended locations')
+      smart.set_submenu(smart_submenu)
+      smart.show()
+      menu.append(smart)
     
     # Quit
     quit = Gtk.MenuItem('Quit')
@@ -69,22 +85,28 @@ class ExpressVpnTray:
     except:
       logger.write('Failed to connect.\n')
   
+  def connect(self, widget, location):
+    try:
+      output = subprocess.run(['expressvpn', 'connect', location], check=True, stdout=subprocess.PIPE).stdout
+      self.is_connected = not self.is_connected
+      self.update_icon()
+    except:
+      logger.write('Failed to connect to ' + location + '.\n')
+  
   def update_icon(self):
     self.tray.set_from_file(ICONS_DIR+'/expressvpn-tray-connected.png' if self.is_connected else ICONS_DIR+'/expressvpn-tray-not-connected.png')
   
   def refresh(self, widget):
     try:
       # Check status.
-      status = os.popen('expressvpn status').read().strip()
-      if not status.startswith('Not connected'):
-        m = re.search('(Connected to .*\n)', status)
-        if m:
-          status = m.group(1)
-      self.vpn_status = status
+      self.vpn_status = utils.status()
       self.is_connected = 'Not connected' not in self.vpn_status
        
       # Update tray icon
       self.update_icon()
+      
+      # Update the list of smart locations.
+      self.locations = utils.locations()
       
       # Schedule next refresh.
       glib.timeout_add(REFRESH_INTERVAL, self.refresh, self.tray)
