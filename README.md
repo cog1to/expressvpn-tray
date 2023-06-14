@@ -14,22 +14,10 @@ The logic relies on the `expressvpn` CLI utility output, so there's a chance it 
 
 It's just a python script, duh.
 
-## Packaging
-
-```
-python3 setup.py sdist
-```
-
 ## Installing
 
 ```
 sudo pip3 install .
-```
-
-or
-
-```
-sudo python3 setup.py install
 ```
 
 ## Running
