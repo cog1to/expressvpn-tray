@@ -17,7 +17,8 @@ It's just a python script, duh.
 ## Installing
 
 ```
-sudo pip3 install .
+python3 setup.py bdist
+sudo python3 setup.py install
 ```
 
 ## Running
