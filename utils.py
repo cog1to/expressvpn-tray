@@ -19,6 +19,8 @@ def status():
   if status_raw.startswith('A new version is available'):
     lines = status_raw.split('\n')
     status_raw = lines[2]
+  elif len(status_raw) == 0:
+    status_raw = 'Not running'
   elif not status_raw.startswith('Not connected'):
     m = re.search('(Connected to .*\n)', status_raw)
     if m:

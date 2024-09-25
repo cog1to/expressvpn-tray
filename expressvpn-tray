@@ -22,7 +22,8 @@ class ExpressVpnTray:
 
     # Check status.
     self.vpn_status = utils.status()
-    self.is_connected = 'Not connected' not in self.vpn_status
+    self.is_connected = ('Not connected' not in self.vpn_status and
+                         'Not running' not in self.vpn_status)
     self.locations = utils.locations()
 
     # Create tray icon.
@@ -100,7 +101,7 @@ class ExpressVpnTray:
     try:
       # Check status.
       self.vpn_status = utils.status()
-      self.is_connected = 'Not connected' not in self.vpn_status
+      self.is_connected = 'Not connected' not in self.vpn_status and 'Not running' not in self.vpn_status
        
       # Update tray icon
       self.update_icon()
