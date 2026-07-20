@@ -4,8 +4,12 @@ import re
 
 Location = collections.namedtuple('Location', ['id', 'title'])
 
+def last_location():
+  output = os.popen("expressvpnctl get region").read().strip().split("\n")
+  return output[0]
+
 def locations():
-  output = os.popen("expressvpn list").read().strip().split("\n")
+  output = os.popen("expressvpnctl get regions").read().strip().split("\n")
   separator_index = _first(output, _starts_with_prefix("---"))
   if separator_index >= 0:
     output = output[separator_index + 2 : len(output) - 2]
@@ -14,14 +18,14 @@ def locations():
 
 def status():
   ansi_escape = re.compile(r'\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])')
-  status_raw = ansi_escape.sub('', os.popen('expressvpn status').read().strip())
+  status_raw = ansi_escape.sub('', os.popen('expressvpnctl get connectionstate').read().strip())
   
   if status_raw.startswith('A new version is available'):
     lines = status_raw.split('\n')
     status_raw = lines[2]
   elif len(status_raw) == 0:
     status_raw = 'Not running'
-  elif not status_raw.startswith('Not connected'):
+  elif not status_raw.startswith('Disconnected'):
     m = re.search('(Connected to .*\n)', status_raw)
     if m:
       status_raw = m.group(1)

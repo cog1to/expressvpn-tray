@@ -22,9 +22,10 @@ class ExpressVpnTray:
 
     # Check status.
     self.vpn_status = utils.status()
-    self.is_connected = ('Not connected' not in self.vpn_status and
+    self.is_connected = ('Disconnected' not in self.vpn_status and
                          'Not running' not in self.vpn_status)
     self.locations = utils.locations()
+    self.last_location = utils.last_location()
 
     # Create tray icon.
     self.tray = Gtk.StatusIcon()
@@ -47,6 +48,12 @@ class ExpressVpnTray:
     status.set_sensitive(False)
     status.show()
     menu.append(status)
+
+    # Last location
+    loc = Gtk.MenuItem("Last location: " + self.last_location)
+    loc.set_sensitive(False)
+    loc.show()
+    menu.append(loc)
     
     # Connect/Disconnect
     toggle = Gtk.MenuItem('Disconnect' if self.is_connected else 'Connect to last location')
@@ -63,7 +70,7 @@ class ExpressVpnTray:
         item.connect('activate', self.connect, location.id)
         smart_submenu.append(item)
       
-      smart = Gtk.MenuItem('Recommended locations')
+      smart = Gtk.MenuItem('Locations')
       smart.set_submenu(smart_submenu)
       smart.show()
       menu.append(smart)
@@ -80,7 +87,7 @@ class ExpressVpnTray:
   def toggle(self, widget):
     try:
       action = 'disconnect' if self.is_connected else 'connect'
-      output = subprocess.run(['expressvpn', action], check=True, stdout=subprocess.PIPE).stdout
+      output = subprocess.run(['expressvpnctl', action], check=True, stdout=subprocess.PIPE).stdout
       self.is_connected = not self.is_connected
       self.update_icon()
     except:
@@ -88,7 +95,7 @@ class ExpressVpnTray:
   
   def connect(self, widget, location):
     try:
-      output = subprocess.run(['expressvpn', 'connect', location], check=True, stdout=subprocess.PIPE).stdout
+      output = subprocess.run(['expressvpnctl', 'connect', location], check=True, stdout=subprocess.PIPE).stdout
       self.is_connected = not self.is_connected
       self.update_icon()
     except:
@@ -101,13 +108,14 @@ class ExpressVpnTray:
     try:
       # Check status.
       self.vpn_status = utils.status()
-      self.is_connected = 'Not connected' not in self.vpn_status and 'Not running' not in self.vpn_status
+      self.is_connected = 'Disconnected' not in self.vpn_status and 'Not running' not in self.vpn_status
        
       # Update tray icon
       self.update_icon()
       
       # Update the list of smart locations.
       self.locations = utils.locations()
+      self.last_location = utils.last_location()
       
       # Schedule next refresh.
       glib.timeout_add(REFRESH_INTERVAL, self.refresh, self.tray)
